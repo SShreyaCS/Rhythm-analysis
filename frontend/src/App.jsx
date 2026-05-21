@@ -59,14 +59,34 @@ function App() {
         body: formData,
       });
 
-      const data = await response.json();
+      let data = {};
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+
       if (!response.ok) {
-        throw new Error(data?.detail || 'Failed to analyze video.');
+        if (response.status === 502) {
+          throw new Error(
+            'The server stopped or timed out while analyzing. Use a shorter video (under 30 seconds) or upgrade your Render API plan.'
+          );
+        }
+        const detail = data?.detail;
+        const message = typeof detail === 'string' ? detail : JSON.stringify(detail);
+        throw new Error(message || `Analysis failed (${response.status}).`);
       }
 
       setResult(data);
     } catch (err) {
-      setError(err.message || 'Something went wrong while analyzing the video.');
+      const msg = err?.message || '';
+      if (msg === 'Failed to fetch' || msg.includes('NetworkError')) {
+        setError(
+          'Cannot reach the analysis API. Check that the backend is live, VITE_API_URL is correct, and ALLOWED_ORIGINS includes this site.'
+        );
+      } else {
+        setError(msg || 'Something went wrong while analyzing the video.');
+      }
     } finally {
       setIsLoading(false);
     }

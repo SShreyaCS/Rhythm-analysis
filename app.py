@@ -17,8 +17,12 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Comma-separated origins, e.g. http://localhost:5173,https://your-app.onrender.com
-_default_origins = "http://localhost:5173,http://127.0.0.1:5173"
+# Comma-separated origins. Override with ALLOWED_ORIGINS on Render if needed.
+_default_origins = ",".join([
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://rhythm-analysis-frontend.onrender.com",
+])
 _allowed_origins = [
     origin.strip()
     for origin in os.getenv("ALLOWED_ORIGINS", _default_origins).split(",")
@@ -28,6 +32,7 @@ _allowed_origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
