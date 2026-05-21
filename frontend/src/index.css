@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg-deep: #1a0508;
+  --bg-mid: #2b0a0a;
+  --bg-card: rgba(35, 12, 14, 0.92);
+  --gold-primary: #d4af37;
+  --gold-light: #e8c96a;
+  --gold-dim: #9a7b2e;
+  --accent-orange: #e87a2a;
+  --text-body: #f5f0e8;
+  --text-muted: rgba(245, 240, 232, 0.75);
+  --text-error: #ff9a9a;
+  --success: #4ade80;
+  --border-gold: rgba(212, 175, 55, 0.55);
+  --shadow-glow: 0 0 30px rgba(232, 122, 42, 0.45), 0 0 60px rgba(212, 175, 55, 0.2);
+  --bg-page: radial-gradient(
+      ellipse 120% 80% at 50% 0%,
+      #3d1218 0%,
+      #1a0508 45%,
+      #120304 100%
+    );
+  --font-display: 'Cinzel', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  font-family: var(--font-body);
+  font-weight: 400;
+  color: var(--text-body);
+  background: var(--bg-deep);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100dvh;
+  width: 100%;
+}
+
+button,
+input {
+  font-family: inherit;
+}
