@@ -9,6 +9,9 @@ import {
 
 const ACCEPTED_TYPES = '.mp4,.avi,.mov,.mkv';
 
+/** Empty in dev (Vite proxy). Set VITE_API_URL on Render static site build. */
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
 function App() {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
@@ -51,7 +54,7 @@ function App() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('/analyze', {
+      const response = await fetch(`${API_BASE}/analyze`, {
         method: 'POST',
         body: formData,
       });

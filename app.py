@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import shutil
 import os
@@ -14,6 +15,22 @@ app = FastAPI(
     title="NrityaAI Rhythm API",
     description="API for analyzing rhythm synchronization built with FastAPI.",
     version="1.0.0"
+)
+
+# Comma-separated origins, e.g. http://localhost:5173,https://your-app.onrender.com
+_default_origins = "http://localhost:5173,http://127.0.0.1:5173"
+_allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", _default_origins).split(",")
+    if origin.strip()
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Directory to temporarily store uploaded videos

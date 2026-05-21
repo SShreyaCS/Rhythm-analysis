@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Uploads & local test media
+temp_uploads/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+
+# MediaPipe model (downloaded on first run)
+*.task
+pose_landmarker_lite.task
+
+# Node / frontend build
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# OneDrive / misc
+~$*

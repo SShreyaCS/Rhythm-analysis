@@ -1,0 +1,18 @@
+# Web API
+fastapi==0.135.3
+uvicorn[standard]==0.44.0
+python-multipart==0.0.26
+
+# Core numerics (used across rhythm/)
+numpy==2.2.6
+scipy==1.16.2
+
+# Audio / video processing (rhythm/audio.py)
+librosa==0.11.0
+soundfile==0.13.1
+moviepy==2.2.1
+imageio-ffmpeg==0.6.0
+
+# Pose / video frames (rhythm/pose.py)
+opencv-python-headless==4.10.0.84
+mediapipe==0.10.21
