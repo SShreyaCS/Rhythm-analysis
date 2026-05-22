@@ -25,8 +25,11 @@ from mediapipe.tasks.python import vision
 # Lower SAMPLE_FPS / SCALE gives faster response with slightly coarser motion curves.
 POSE_SAMPLE_FPS = float(os.getenv("POSE_SAMPLE_FPS", "12"))
 POSE_FRAME_SCALE = float(os.getenv("POSE_FRAME_SCALE", "0.5"))
+MAX_POSE_SAMPLES = int(os.getenv("MAX_POSE_SAMPLES", "200"))
+POSE_MODEL_PATH = os.path.join(os.path.dirname(__file__), "pose_landmarker_lite.task")
 
-def download_model_if_needed(model_path: str):
+
+def download_model_if_needed(model_path: str = POSE_MODEL_PATH):
     """Downloads the PoseLandmarker model task file if it doesn't exist locally."""
     if not os.path.exists(model_path):
         url = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task"
@@ -36,10 +39,9 @@ def download_model_if_needed(model_path: str):
 def get_motion_signal(video_path: str, return_metadata: bool = False):
     """Computes a combined motion signal (velocity) from the video."""
     try:
-        model_path = os.path.join(os.path.dirname(__file__), "pose_landmarker_lite.task")
-        download_model_if_needed(model_path)
+        download_model_if_needed(POSE_MODEL_PATH)
         
-        base_options = python.BaseOptions(model_asset_path=model_path)
+        base_options = python.BaseOptions(model_asset_path=POSE_MODEL_PATH)
         options = vision.PoseLandmarkerOptions(
             base_options=base_options,
             running_mode=vision.RunningMode.VIDEO
@@ -89,7 +91,9 @@ def get_motion_signal(video_path: str, return_metadata: bool = False):
                 timestamp_sec = frame_idx / fps
                 timestamp_ms = int(timestamp_sec * 1000)
                 sampled_frames += 1
-                
+                if sampled_frames >= MAX_POSE_SAMPLES:
+                    break
+
                 # Downscale frame before pose detection for faster inference.
                 frame_small = cv2.resize(
                     frame,

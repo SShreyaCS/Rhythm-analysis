@@ -69,7 +69,7 @@ function App() {
       if (!response.ok) {
         if (response.status === 502) {
           throw new Error(
-            'The server stopped or timed out while analyzing. Use a shorter video (under 30 seconds) or upgrade your Render API plan.'
+            'The server stopped or timed out while analyzing. Use a clip under 25 seconds, or upgrade your Render API plan for longer videos.'
           );
         }
         const detail = data?.detail;
@@ -208,7 +208,8 @@ function App() {
                   <div className="waveform" aria-hidden="true" />
                   <p className="hint">
                     Upload a Bharatanatyam performance to analyze rhythm synchronization and beat
-                    alignment.
+                    alignment. For deployed analysis, keep clips under 25 seconds to avoid server
+                    timeouts.
                   </p>
                   {file && <p className="file-name">{file.name}</p>}
                   {error && <p className="error">{error}</p>}

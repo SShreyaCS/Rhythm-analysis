@@ -5,10 +5,17 @@ import numpy as np
 import librosa
 from moviepy import VideoFileClip
 
+MAX_AUDIO_SEC = float(
+    os.getenv("MAX_AUDIO_SEC", os.getenv("MAX_VIDEO_DURATION_SEC", "25"))
+)
+
+
 def get_beat_times(video_path: str) -> np.ndarray:
     """Extracts audio from video and returns beat timestamps."""
     try:
         clip = VideoFileClip(video_path)
+        if clip.duration and clip.duration > MAX_AUDIO_SEC:
+            clip = clip.subclipped(0, MAX_AUDIO_SEC)
         audio = clip.audio
         if audio is None:
             clip.close()
