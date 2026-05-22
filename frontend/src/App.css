@@ -443,6 +443,12 @@
   color: var(--text-error);
 }
 
+.api-banner,
+.loading-error {
+  margin-top: 0.75rem;
+  line-height: 1.4;
+}
+
 .analyze-btn,
 .secondary-btn {
   width: 100%;

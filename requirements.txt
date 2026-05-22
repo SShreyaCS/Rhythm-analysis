@@ -7,11 +7,9 @@ python-multipart==0.0.26
 numpy==1.26.4
 scipy==1.16.2
 
-# Audio / video processing (rhythm/audio.py)
+# Audio processing (rhythm/audio.py — uses system ffmpeg from apt.txt on Render)
 librosa==0.11.0
 soundfile==0.13.1
-moviepy==2.2.1
-imageio-ffmpeg==0.6.0
 
 # Pose / video frames (rhythm/pose.py)
 opencv-python-headless==4.10.0.84

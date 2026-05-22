@@ -10,10 +10,27 @@ services:
       - key: PYTHON_VERSION
         value: "3.11.9"
       - key: MAX_VIDEO_DURATION_SEC
-        value: "25"
+        value: "20"
+      - key: ANALYZE_TIMEOUT_SEC
+        value: "26"
       - key: POSE_SAMPLE_FPS
-        value: "8"
+        value: "6"
       - key: MAX_POSE_SAMPLES
-        value: "180"
+        value: "90"
+      - key: POSE_FRAME_SCALE
+        value: "0.4"
       - key: ALLOWED_ORIGINS
         value: http://localhost:5173,http://127.0.0.1:5173,https://rhythm-analysis-frontend.onrender.com
+
+  - type: web
+    name: rhythm-analysis-frontend
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      # Links frontend build to the API service URL (required for /analyze to work).
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: rhythm-analysis-api
+          envVarKey: RENDER_EXTERNAL_URL

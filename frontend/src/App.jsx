@@ -6,11 +6,17 @@ import {
   InfoIcon,
   UploadIcon,
 } from './components/Icons';
+import {
+  assertAnalysisPayload,
+  fetchWithTimeout,
+  getApiBase,
+  isApiConfigured,
+  parseApiError,
+  resolveAnalyzeUrl,
+  resolveHealthUrl,
+} from './api';
 
 const ACCEPTED_TYPES = '.mp4,.avi,.mov,.mkv';
-
-/** Empty in dev (Vite proxy). Set VITE_API_URL on Render static site build. */
-const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 function App() {
   const [file, setFile] = useState(null);
@@ -18,6 +24,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [apiStatus, setApiStatus] = useState(
+    import.meta.env.PROD ? (isApiConfigured() ? 'checking' : 'missing') : 'dev'
+  );
 
   const isSubPage = isLoading || Boolean(result);
 
@@ -39,6 +48,54 @@ function App() {
     return () => URL.revokeObjectURL(objectUrl);
   }, [file]);
 
+  useEffect(() => {
+    const healthUrl = resolveHealthUrl();
+    if (!healthUrl) {
+      setApiStatus('missing');
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetchWithTimeout(healthUrl, {}, 15000);
+        if (cancelled) return;
+        if (!response.ok) {
+          setApiStatus('error');
+          return;
+        }
+        const data = await response.json();
+        if (cancelled) return;
+        setApiStatus(data?.status === 'healthy' ? 'ok' : 'degraded');
+      } catch {
+        if (!cancelled) setApiStatus('error');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const apiStatusMessage = useMemo(() => {
+    if (apiStatus === 'missing') {
+      return (
+        'Analysis API is not configured. Set VITE_API_URL to your backend URL ' +
+        '(e.g. https://your-api.onrender.com) and redeploy the frontend.'
+      );
+    }
+    if (apiStatus === 'error') {
+      return `Cannot reach the API at ${getApiBase()}. Check that the backend is live and ALLOWED_ORIGINS includes this site.`;
+    }
+    if (apiStatus === 'degraded') {
+      return 'API is up but the rhythm module may be missing on the server.';
+    }
+    if (apiStatus === 'checking') {
+      return 'Checking API connection…';
+    }
+    return '';
+  }, [apiStatus]);
+
   const handleAnalyze = async (event) => {
     event.preventDefault();
     if (!file) {
@@ -51,38 +108,39 @@ function App() {
     setResult(null);
 
     try {
+      const analyzeUrl = resolveAnalyzeUrl();
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`${API_BASE}/analyze`, {
+      const response = await fetchWithTimeout(analyzeUrl, {
         method: 'POST',
         body: formData,
       });
 
       let data = {};
-      try {
-        data = await response.json();
-      } catch {
-        data = {};
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          data = await response.json();
+        } catch {
+          data = {};
+        }
       }
 
       if (!response.ok) {
-        if (response.status === 502) {
-          throw new Error(
-            'The server stopped or timed out while analyzing. Use a clip under 25 seconds, or upgrade your Render API plan for longer videos.'
-          );
-        }
-        const detail = data?.detail;
-        const message = typeof detail === 'string' ? detail : JSON.stringify(detail);
-        throw new Error(message || `Analysis failed (${response.status}).`);
+        throw new Error(parseApiError(response, data));
       }
 
-      setResult(data);
+      setResult(assertAnalysisPayload(data));
     } catch (err) {
       const msg = err?.message || '';
-      if (msg === 'Failed to fetch' || msg.includes('NetworkError')) {
+      if (err?.name === 'AbortError') {
         setError(
-          'Cannot reach the analysis API. Check that the backend is live, VITE_API_URL is correct, and ALLOWED_ORIGINS includes this site.'
+          'Analysis timed out. Use a shorter clip (under 25 seconds) or check that the backend is running.'
+        );
+      } else if (msg === 'Failed to fetch' || msg.includes('NetworkError')) {
+        setError(
+          'Cannot reach the analysis API. Check VITE_API_URL, backend health, and CORS (ALLOWED_ORIGINS).'
         );
       } else {
         setError(msg || 'Something went wrong while analyzing the video.');
@@ -110,6 +168,8 @@ function App() {
       ? `Synchronization: ${formattedScore}`
       : 'Video not valid for Bharatanatyam scoring'
     : 'Synchronization: --';
+
+  const showApiBanner = apiStatusMessage && !isLoading && !result;
 
   return (
     <div className="app-shell">
@@ -184,6 +244,7 @@ function App() {
                   <h2 className="section-label">Analyzing Rhythm</h2>
                   <p>Playing your uploaded video while we calculate beat synchronization.</p>
                   <p className="loading-note">Please keep this tab open until the analysis completes.</p>
+                  {error && <p className="error loading-error">{error}</p>}
                 </div>
               </div>
             ) : !result ? (
@@ -199,6 +260,7 @@ function App() {
 
                 <form className="upload-section panel-card" onSubmit={handleAnalyze}>
                   <p className="section-label section-label--upper">Upload Your Performance</p>
+                  {showApiBanner && <p className="error api-banner">{apiStatusMessage}</p>}
                   <label htmlFor="video-upload" className="upload-box">
                     <UploadIcon />
                     <strong>Upload Dance Video</strong>
@@ -213,7 +275,11 @@ function App() {
                   </p>
                   {file && <p className="file-name">{file.name}</p>}
                   {error && <p className="error">{error}</p>}
-                  <button className="analyze-btn" type="submit" disabled={!file || isLoading}>
+                  <button
+                    className="analyze-btn"
+                    type="submit"
+                    disabled={!file || isLoading || apiStatus === 'missing' || apiStatus === 'checking'}
+                  >
                     Analyze
                   </button>
                 </form>

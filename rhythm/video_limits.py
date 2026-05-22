@@ -2,9 +2,7 @@ import os
 
 import cv2
 
-# Render's load balancer times out long HTTP requests (~30s on free/starter tiers).
-MAX_VIDEO_DURATION_SEC = float(os.getenv("MAX_VIDEO_DURATION_SEC", "25"))
-MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(50 * 1024 * 1024)))
+from rhythm.config import MAX_UPLOAD_BYTES, MAX_VIDEO_DURATION_SEC
 
 
 def get_video_duration_seconds(video_path: str) -> float:
